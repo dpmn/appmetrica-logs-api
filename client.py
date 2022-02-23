@@ -48,3 +48,8 @@ class AppMetrica:
         else:
             print(f'Response ({req_point}) {response.status_code}: {response.text}')
             return {'data': []}
+    
+    # Кастомный метод для получения описания схем данных точек запроса
+    @staticmethod
+    def get_schema(point: str):
+        return schemas.get(point, [])
