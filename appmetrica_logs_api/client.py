@@ -59,8 +59,8 @@ class AppMetrica:
         :param resource: Название ресурса.
         :param application_id: Идентификатор приложения в AppMetrica.
         :param fields: Список полей для выборки. Если не задан, запрашиваются все доступные поля ресурса.
-        :param date_from: Начало интервала дат.
-        :param date_to: Конец интервала дат.
+        :param date_from: Начало интервала дат в формате yyyy-mm-dd hh:mm:ss.
+        :param date_to: Конец интервала дат в формате yyyy-mm-dd hh:mm:ss.
         :param kwargs: Другие параметры ресурса и заголовков (Cache-Control и Accept-Encoding) в формате snake_case.
         Также доступен кастомный параметр export_format, который определяет формат данных (csv/json).
         :return:
