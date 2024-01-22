@@ -6,13 +6,17 @@ from requests.exceptions import ConnectionError
 from appmetrica_logs_api.constants import APIResources
 from appmetrica_logs_api.schemas.events import EventsSchema
 from appmetrica_logs_api.schemas.installations import InstallationsSchema
+from appmetrica_logs_api.schemas.profiles import ProfilesSchema
+from appmetrica_logs_api.schemas.revenue_events import RevenueEventsSchema
 
 from appmetrica_logs_api.exceptions import AppmetricaClientError, AppmetricaApiError
 
 
-RESOURCES_SCHEMA = {
+RESOURCES_SCHEMA_MAPPING = {
     APIResources.EVENTS: EventsSchema,
     APIResources.INSTALLATIONS: InstallationsSchema,
+    APIResources.PROFILES: ProfilesSchema,
+    APIResources.REVENUE_EVENTS: RevenueEventsSchema,
 }
 
 
@@ -72,8 +76,8 @@ class AppMetrica:
 
         api_url = '/'.join([self._api_endpoint, f'{resource}']) + f'.{export_format}'
 
-        if resource in RESOURCES_SCHEMA.keys():
-            fields = ','.join(list(RESOURCES_SCHEMA[resource].model_fields.keys())) if fields is None else ','.join(fields)
+        if resource in RESOURCES_SCHEMA_MAPPING.keys():
+            fields = ','.join(list(RESOURCES_SCHEMA_MAPPING[resource].model_fields.keys())) if fields is None else ','.join(fields)
         else:
             raise AppmetricaClientError(f'Ресурс {resource} не доступен для экспорта.')
 
