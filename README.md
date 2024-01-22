@@ -1,2 +1,2 @@
 # appmetrica-logs-api
-AppMetrica Logs API Client
+Выгружайте неагрегированные данные, собранные для вашего мобильного приложения в AppMetrica.
