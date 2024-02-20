@@ -50,7 +50,7 @@ class AppMetrica:
                 elif response.status_code in (201, 202):
                     # Увеличение задержки с каждой неудачной попыткой
                     retry_count += 1
-                    sleep(base_delay * 2 ^ retry_count)
+                    sleep(base_delay * 2 ** retry_count)
                 else:
                     raise AppmetricaApiError(response.text)
             except ConnectionError:
@@ -65,7 +65,7 @@ class AppMetrica:
         :param fields: Список полей для выборки. Если не задан, запрашиваются все доступные поля ресурса.
         :param date_from: Начало интервала дат в формате yyyy-mm-dd hh:mm:ss.
         :param date_to: Конец интервала дат в формате yyyy-mm-dd hh:mm:ss.
-        :param kwargs: Другие параметры ресурса и заголовков (Cache-Control и Accept-Encoding) в формате snake_case.
+        :param kwargs: Другие параметры ресурса и заголовка Cache-Control в формате snake_case.
         Также доступен кастомный параметр export_format, который определяет формат данных (csv/json).
         :return:
         """
@@ -81,13 +81,11 @@ class AppMetrica:
         else:
             raise AppmetricaClientError(f'Ресурс {resource} не доступен для экспорта.')
 
-        headers = {}
-        # Отвечает за то, будет сформирован новый файл при повторном запросе или отдан сформированный ранее.
-        if cache_control := kwargs.pop('cache_control', None):
-            headers.update({'Cache-Control': cache_control})
-        # Сжатие gzip.
-        if accept_encoding := kwargs.pop('accept_encoding', None):
-            headers.update({'Accept-Encoding': accept_encoding})
+        headers = {
+            # Отвечает за то, будет сформирован новый файл при повторном запросе или отдан сформированный ранее
+            'Cache-Control': kwargs.pop('cache_control', 'no-cache'),
+            'Accept-Encoding': 'gzip'  # Сжатие gzip
+        }
 
         params = {
             'application_id': application_id,
