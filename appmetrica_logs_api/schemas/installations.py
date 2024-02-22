@@ -13,7 +13,7 @@ class InstallationsSchema(BaseModel):
     installation_id: str | None = Field(
         description='Идентификатор установки.'
     )
-    attribution_touch_type: str | None = Field(
+    attributed_touch_type: str | None = Field(
         description='Тип рекламного взаимодействия: click | impression | unknown.'
     )
     click_datetime: datetime | None = Field(
