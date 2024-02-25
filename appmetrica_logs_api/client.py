@@ -114,7 +114,7 @@ class AppMetrica:
         }
 
         # Для всех ресурсов, кроме profiles и push_tokens надо указать диапазон дат.
-        if resource not in ('profiles', 'push_tokens'):
+        if resource not in (APIResources.PROFILES, APIResources.PUSH_TOKENS):
             if all([date_from, date_to]):
                 params.update({'date_since': date_from.strftime(dt_format), 'date_until': date_to.strftime(dt_format)})
             else:
