@@ -58,8 +58,6 @@ class AppMetrica:
         while True:
             try:
                 response = http_request('GET', url=url, params=params, headers=headers)
-                # Принудительная обработка ответа в кодировке UTF-8
-                response.encoding = 'utf-8'
 
                 if response.status_code == 200:
                     return response
