@@ -8,6 +8,13 @@ from appmetrica_logs_api.schemas.events import EventsSchema
 from appmetrica_logs_api.schemas.installations import InstallationsSchema
 from appmetrica_logs_api.schemas.profiles import ProfilesSchema
 from appmetrica_logs_api.schemas.revenue_events import RevenueEventsSchema
+from appmetrica_logs_api.schemas.deeplinks import DeeplinksSchema
+from appmetrica_logs_api.schemas.clicks import ClicksSchema
+from appmetrica_logs_api.schemas.postbacks import PostbacksSchema
+from appmetrica_logs_api.schemas.sessions_starts import SessionsStartsSchema
+from appmetrica_logs_api.schemas.errors import ErrorsSchema
+from appmetrica_logs_api.schemas.crashes import CrashesSchema
+from appmetrica_logs_api.schemas.push_tokens import PushTokensSchema
 
 from appmetrica_logs_api.exceptions import AppmetricaClientError, AppmetricaApiError
 
@@ -17,13 +24,21 @@ RESOURCES_SCHEMA_MAPPING = {
     APIResources.INSTALLATIONS: InstallationsSchema,
     APIResources.PROFILES: ProfilesSchema,
     APIResources.REVENUE_EVENTS: RevenueEventsSchema,
+    APIResources.DEEPLINKS: DeeplinksSchema,
+    APIResources.CLICKS: ClicksSchema,
+    APIResources.POSTBACKS: PostbacksSchema,
+    APIResources.SESSIONS_STARTS: SessionsStartsSchema,
+    APIResources.ERRORS: ErrorsSchema,
+    APIResources.CRASHES: CrashesSchema,
+    APIResources.PUSH_TOKENS: PushTokensSchema,
 }
 
 
 class AppMetrica:
-    def __init__(self, app_token: str) -> None:
+    def __init__(self, app_token: str, **kwargs) -> None:
         self.__app_token = app_token
         self._api_endpoint = 'https://api.appmetrica.yandex.ru/logs/v1/export'
+        self._request_latency = kwargs.get('request_latency', 10)  # Базовая задержка между запросами API
 
     def _make_request(self, url: str, params: dict, headers: dict):
         """
@@ -35,7 +50,6 @@ class AppMetrica:
         """
         # Параметры для регулирования скорости выполнения повторных запросов на скачивание файла.
         retry_count = 0
-        base_delay = 10  # секунды
 
         headers.update({
             'Authorization': f'OAuth {self.__app_token}'
@@ -52,7 +66,11 @@ class AppMetrica:
                 elif response.status_code in (201, 202):
                     # Увеличение задержки с каждой неудачной попыткой
                     retry_count += 1
-                    sleep(base_delay * 2 ** retry_count)
+                    latency_time = self._request_latency * 2 ** retry_count
+                    sleep(latency_time)
+                    if latency_time >= 1200:
+                        # Сбрасываем счётчик, если время ожидания больше 20 минут
+                        retry_count = 0
                 else:
                     raise AppmetricaApiError(response.text)
             except ConnectionError:
@@ -96,7 +114,7 @@ class AppMetrica:
         }
 
         # Для всех ресурсов, кроме profiles и push_tokens надо указать диапазон дат.
-        if resource not in ('profiles', 'push_tokens'):
+        if resource not in (APIResources.PROFILES, APIResources.PUSH_TOKENS):
             if all([date_from, date_to]):
                 params.update({'date_since': date_from.strftime(dt_format), 'date_until': date_to.strftime(dt_format)})
             else:
