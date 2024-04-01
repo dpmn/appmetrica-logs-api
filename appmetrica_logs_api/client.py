@@ -40,12 +40,13 @@ class AppMetrica:
         self._api_endpoint = 'https://api.appmetrica.yandex.ru/logs/v1/export'
         self._request_latency = kwargs.get('request_latency', 10)  # Базовая задержка между запросами API
 
-    def _make_request(self, url: str, params: dict, headers: dict):
+    def _make_request(self, url: str, params: dict, headers: dict, stream: bool):
         """
         Общая функция отправки запросов к API.
         :param url: Конечная точка запроса.
         :param params: Параметры запросы.
         :param headers: Заголовки запроса.
+        :param stream: Если True, можно выполнять потоковую обработку результата запроса.
         :return:
         """
         # Параметры для регулирования скорости выполнения повторных запросов на скачивание файла.
@@ -57,7 +58,7 @@ class AppMetrica:
 
         while True:
             try:
-                response = http_request('GET', url=url, params=params, headers=headers)
+                response = http_request('GET', url=url, params=params, headers=headers, stream=stream)
                 # Принудительная обработка ответа в кодировке UTF-8
                 response.encoding = 'utf-8'
 
@@ -87,12 +88,17 @@ class AppMetrica:
         :param date_to: Конец интервала дат в формате yyyy-mm-dd hh:mm:ss.
         :param kwargs: Другие параметры ресурса и заголовка Cache-Control в формате snake_case.
         Также доступен кастомный параметр export_format, который определяет формат данных (csv/json).
+        Параметры запроса: stream, chunk_size, decode_unicode
         :return:
         """
         # Формат даты и времени, требуемый для параметров запроса.
         dt_format = '%Y-%m-%d %H:%M:%S'
         # Формат данных
         export_format = kwargs.pop('export_format', 'csv')
+        # Параметры для потоковой обработки ответа
+        stream = kwargs.pop('stream', False)
+        chunk_size = kwargs.pop('chunk_size', 10 * 1024 * 1024)  # Размер одного чанка в байтах, по умолчанию 10MB
+        decode_unicode = kwargs.pop('decode_unicode', False)
 
         api_url = '/'.join([self._api_endpoint, f'{resource}']) + f'.{export_format}'
 
@@ -121,9 +127,11 @@ class AppMetrica:
                 raise AppmetricaClientError(f'Для ресурса {resource} требуется указать диапазон дат - '
                                             f'параметры date_from и date_to')
 
-        response = self._make_request(api_url, params, headers)
+        response = self._make_request(api_url, params, headers, stream)
 
-        if export_format == 'csv':
-            return response.text
+        if stream is True:
+            return response.iter_content(chunk_size=chunk_size, decode_unicode=decode_unicode)
+        elif export_format == 'csv':
+            return response.content
         else:
             return response.json()
